@@ -5,4 +5,10 @@
 
 ## Components of an autograd engine
 - Value class which implements methods for algebraic operations and functions
-- State
+- Each value object can generate a gradient
+- Value objects point to their children (the values involved in creating self)
+- 
+
+
+## Future support 
+- Vector values / tensor values
