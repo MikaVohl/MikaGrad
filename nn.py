@@ -9,41 +9,28 @@ class Module:
     def parameters(self):
         return []
 
-class Neuron(Module):
-    def __init__(self, num_in, nonlin=True):
-        self.weights = Value(np.random.uniform(-1, 1), size=(num_in,))
-        self.bias = Value(0.0)
+class Layer(Module):
+    def __init__(self, num_in, num_out, nonlin=True):
+        # self.neurons = [Neuron(num_in, **kwargs) for _ in range(num_out)]
+        self.weights = Value(np.random.uniform(-1, 1, size=(num_out, num_in)))
+        self.bias = Value(np.zeros(num_out))
         self.nonlin = nonlin
     
     def __call__(self, x):
         x = x if isinstance(x, Value) else Value(np.asarray(x, dtype=float))
-        act = self.weights.dot(x) + self.bias
-        return act.relu() if self.nonlin else act
+        out = x @ self.weights.T + self.bias
+        return out.relu() if self.nonlin else out
     
     def parameters(self):
         return [self.weights, self.bias]
     
     def __repr__(self):
-        return f"Neuron(weights={self.weights}, bias={self.bias}, nonlin={self.nonlin})"
-
-class Layer(Module):
-    def __init__(self, num_in, num_out, **kwargs):
-        self.neurons = [Neuron(num_in, **kwargs) for _ in range(num_out)]
-    
-    def __call__(self, x):
-        out = [n(x) for n in self.neurons]
-        return out[0] if len(out) == 1 else out
-    
-    def parameters(self):
-        return [param for neuron in self.neurons for param in neuron.parameters()]
-    
-    def __repr__(self):
-        return f"Layer(neurons={self.neurons})"
+        return f"Layer(weights={self.weights}, bias={self.bias}, nonlin={self.nonlin})"
     
 class MLP(Module):
     def __init__(self, num_in, num_outs):
         sz = [num_in] + num_outs
-        self.layers = [Layer(sz[i], sz[i + 1], nonlin=i!=len(num_outs)-1) for i in range(len(num_outs))]
+        self.layers = [Layer(sz[i], sz[i + 1], nonlin=(i != len(num_outs)-1)) for i in range(len(num_outs))]
 
     def __call__(self, x):
         for layer in self.layers:
