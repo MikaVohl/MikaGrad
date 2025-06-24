@@ -1,6 +1,7 @@
 # Visualization code for autograd graphs using Graphviz
 # Much of this code is inspired by Andrej Karpathy's micrograd visualization code
 from graphviz import Digraph
+from IPython.display import Image
 
 def _trace(root):
     nodes, edges = set(), []
@@ -31,4 +32,5 @@ def draw_dot(root):
     for src, dst in edges:
         dot.edge(str(id(src)), str(id(dst)))
 
-    return dot
+    png_bytes = dot.pipe(format='png')
+    return Image(png_bytes)
