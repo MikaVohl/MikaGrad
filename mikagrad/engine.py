@@ -1,5 +1,4 @@
 import numpy as np
-from numbers import Real
 
 def match_shape(grad: np.ndarray, target_shape: tuple) -> np.ndarray:
     # right-align shapes
@@ -16,9 +15,8 @@ def match_shape(grad: np.ndarray, target_shape: tuple) -> np.ndarray:
 
 class Value():
     def __init__(self, data, operation="", children=()):
-        if isinstance(data, (list, tuple, Real)):
-            data = np.array(data, dtype=float)
-        assert isinstance(data, np.ndarray), "data must be a numpy array"
+        if not isinstance(data, np.ndarray):
+            data = np.array(data, dtype=float, copy=False)
         self.data = data
         self.operation = operation
         self.children = children
@@ -28,9 +26,20 @@ class Value():
     def __repr__(self):
         return str(self.data)
     
+    @property
+    def T(self):
+        result = Value(self.data.T, "T", (self,))
+
+        def _backward():
+            self.grad += match_shape(result.grad.T, self.data.shape)
+
+        result._backward = _backward
+        return result
+    
     def dot(self, other):
         other = other if isinstance(other, Value) else Value(other)
-        assert self.data.ndim == 1 and other.data.ndim == 1, "Dot product is only defined for vectors"
+        if self.data.ndim != 1 or other.data.ndim != 1:
+            raise ValueError("Dot product is only defined for 1D vectors")
         result = Value(np.dot(self.data, other.data), "•", (self, other))
         def _backward():
             self.grad += result.grad * other.data
@@ -62,15 +71,19 @@ class Value():
         result = Value(np.matmul(self.data, other.data), "@", (self, other))
         
         def _backward():
-            self_grad = np.matmul(result.grad, other.data.swapaxes(-1, -2))
-            other_grad = np.matmul(self.data.swapaxes(-1, -2), result.grad)
+            self_grad = np.matmul(result.grad, other.data.swapaxes(-1, -2) if other.data.ndim >= 2 else other.data)
+            if self.data.ndim == 1:
+                other_grad = np.outer(self.data, result.grad)
+            else:    
+                other_grad = np.matmul(self.data.swapaxes(-1, -2), result.grad)
             self.grad  += match_shape(self_grad, self.data.shape)
             other.grad += match_shape(other_grad, other.data.shape)
         result._backward = _backward
         return result
     
     def __pow__(self, other):
-        assert isinstance(other, (float, int)), "power must be float or integer" # must force "other" to be primitive float or int
+        if isinstance(other, Value):
+            raise ValueError("Power operation is only defined for primitive types (float or int)")
         result = Value(self.data ** other, "^", (self,))
         def _backward():
             self.grad += match_shape(other * self.data ** (other - 1) * result.grad, self.data.shape)
@@ -131,7 +144,6 @@ class Value():
                 visited.add(v)
                 v.grad = np.zeros_like(v.data, dtype=float)
                 for child in v.children:
-                    assert isinstance(child, Value), "Child must be an instance of Value"
                     _zero(child)
         _zero(self)
 

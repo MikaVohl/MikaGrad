@@ -1,3 +1,5 @@
+# Visualization code for autograd graphs using Graphviz
+# Much of this code is inspired by Andrej Karpathy's micrograd visualization code
 from graphviz import Digraph
 
 def _trace(root):

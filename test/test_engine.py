@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 import pytest
-from engine import Value, match_shape
+from mikagrad.engine import Value, match_shape
 
 torch.set_default_dtype(torch.float64)
 np.random.seed(42)
@@ -189,7 +189,7 @@ def test_complex_and_zero_grad():
         assert np.all(v.grad == 0), "zero_grad failed"
 
 
-# match_shape utility – quick sanity check
+# match_shape utility - quick sanity check
 
 @pytest.mark.parametrize("gshape,tshape", [
     ((2,3,4), (4,)),
