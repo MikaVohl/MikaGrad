@@ -2,6 +2,7 @@
 
 MikaGrad is my implementation of an autograd engine which extends Karpathy's [micrograd](https://github.com/karpathy/micrograd) to support arbitrary dimensional tensors, allowing for much more complex and optimized computations. MikaGrad's syntax is Pytorch-like and it implements many of the same methods, allowing for easy adoption by industry users.
 
+For the best preview of MikaGrad's usage and feature set, check out the `walkthrough.ipynb` notebook in this repository.
 
 ## Components
 ### Autograd Engine (`engine.py`)
