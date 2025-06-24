@@ -11,7 +11,6 @@ class Module:
 
 class Layer(Module):
     def __init__(self, num_in, num_out, nonlin=True):
-        # self.neurons = [Neuron(num_in, **kwargs) for _ in range(num_out)]
         self.weights = Value(np.random.uniform(-1, 1, size=(num_out, num_in)))
         self.bias = Value(np.zeros(num_out))
         self.nonlin = nonlin
